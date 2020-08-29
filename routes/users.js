@@ -2,7 +2,7 @@ const express = require("express");
 const router = new express.Router();
 const jwt = require("jsonwebtoken");
 const ExpressError = require("../expressError");
-const { authenticateJWT, ensureLoggedIn, ensureCorrectUser } = require("../middleware/auth");
+const { ensureLoggedIn, ensureCorrectUser } = require("../middleware/auth");
 const { SECRET_KEY } = require("../config");
 const User = require("../models/user");
 
@@ -25,7 +25,7 @@ router.get("/", ensureLoggedIn, function(req, res, next) {
  * => {user: {username, first_name, last_name, phone, join_at, last_login_at}}
  *
  **/
-router.get("/:username", ensureLoggedIn, function(req, res, next) {
+router.get("/:username", ensureCorrectUser, function(req, res, next) {
 	try {
 		const username = req.params.username;
 		return res.json({ user: User.get(username) });
@@ -43,7 +43,7 @@ router.get("/:username", ensureLoggedIn, function(req, res, next) {
  *
  **/
 
-router.get("/:username/to", ensureLoggedIn, function(req, res, next) {
+router.get("/:username/to", ensureCorrectUser, function(req, res, next) {
 	try {
 		const username = req.params.username;
 		return res.json({ messages: User.messagesTo(username) });
@@ -61,7 +61,7 @@ router.get("/:username/to", ensureLoggedIn, function(req, res, next) {
  *                 to_user: {username, first_name, last_name, phone}}, ...]}
  *
  **/
-router.get("/:username/from", ensureLoggedIn, function(req, res, next) {
+router.get("/:username/from", ensureCorrectUser, function(req, res, next) {
 	try {
 		const username = req.params.username;
 		return res.json({ messages: User.messagesFrom(username) });
