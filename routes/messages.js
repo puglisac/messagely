@@ -1,3 +1,9 @@
+const express = require("express");
+const router = new express.Router();
+const { ensureLoggedIn, ensureCorrectUser } = require("../middleware/auth");
+const Message = require("../models/message");
+const ExpressError = require("../expressError");
+
 /** GET /:id - get detail of message.
  *
  * => {message: {id,
@@ -10,7 +16,18 @@
  * Make sure that the currently-logged-in users is either the to or from user.
  *
  **/
-
+router.get("/:id", function(req, res, next) {
+	try {
+		const messageId = req.params.id;
+		const retMessage = Message.get(messageId);
+		if (req.user.username != retMessage.from_username || req.user.username != retMessage.to_username) {
+			throw new ExpressError("Not authorized to view this message", 401);
+		}
+		return res.json({ message: retMessage });
+	} catch (e) {
+		return next(e);
+	}
+});
 
 /** POST / - post message.
  *
@@ -19,7 +36,6 @@
  *
  **/
 
-
 /** POST/:id/read - mark message as read:
  *
  *  => {message: {id, read_at}}
@@ -27,4 +43,16 @@
  * Make sure that the only the intended recipient can mark as read.
  *
  **/
+router.post("/:id/read", function(req, res, next) {
+	try {
+		const messageId = req.params.id;
+		const retMessage = Message.get(messageId);
+		if (req.user.username != retMessage.to_username) {
+			throw new ExpressError("Not authorized to mark this message as read", 401);
+		}
 
+		return res.json({ message: Message.markRead(messageId) });
+	} catch (e) {
+		return next(e);
+	}
+});
