@@ -15,11 +15,11 @@ const User = require("../models/user");
 router.post("/login", async function(req, res, next) {
 	try {
 		const { username, password } = req.body;
-		const user = User.get(username);
+		const user = await User.get(username);
 
 		if (user) {
-			if (User.authenticate(username, password)) {
-				User.updateLoginTimestamp(username);
+			if (await User.authenticate(username, password)) {
+				await User.updateLoginTimestamp(username);
 				let token = jwt.sign({ username }, SECRET_KEY);
 				return res.json({ token });
 			}
@@ -39,8 +39,8 @@ router.post("/login", async function(req, res, next) {
 router.post("/register", async function(req, res, next) {
 	try {
 		const { username, password, first_name, last_name, phone } = req.body;
-		User.register(username, password, first_name, last_name, phone);
-		User.updateLoginTimestamp(username);
+		await User.register({ username, password, first_name, last_name, phone });
+		await User.updateLoginTimestamp(username);
 		let token = jwt.sign({ username }, SECRET_KEY);
 		return res.json({ token });
 	} catch (err) {
@@ -50,3 +50,4 @@ router.post("/register", async function(req, res, next) {
 		return next(err);
 	}
 });
+module.exports = router;
