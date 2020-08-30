@@ -152,7 +152,12 @@ describe("Message Routes Test", function() {
 			const authToken = authLogin.body.token;
 			const resp = await request(app).post(`/messages/${msg.body.message.id}/read`).send({ _token: authToken });
 			expect(resp.status).toEqual(200);
-			expect(resp.body).toEqual(expect.any(Object));
+			expect(resp.body).toEqual({
+				message: {
+					id: expect.any(Number),
+					read_at: expect.any(String)
+				}
+			});
 		});
 		test("cannot mark message as read if unauthorized", async function() {
 			const msg = await request(app)
