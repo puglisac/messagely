@@ -75,6 +75,96 @@ describe("User Routes Test", function() {
 			expect(resp.status).toEqual(401);
 		});
 	});
+	describe("get /:username/from", function() {
+		test("can get messages from a user", async function() {
+			let u2 = await User.register({
+				username: "test2",
+				password: "password",
+				first_name: "Test2",
+				last_name: "Testy2",
+				phone: "+14155550000"
+			});
+			const msg = await request(app)
+				.post("/messages/")
+				.send({ to_username: "test2", body: "test body", _token: token });
+
+			const resp = await request(app).get(`/users/test1/from`).send({ _token: token });
+			expect(resp.status).toEqual(200);
+			expect(resp.body).toEqual({
+				messages: [
+					{
+						id: expect.any(Number),
+						body: "test body",
+						sent_at: expect.any(String),
+						read_at: null,
+						to_user: expect.any(Object)
+					}
+				]
+			});
+		});
+		test("cannot get messages from a user if unauthorized", async function() {
+			let u2 = await User.register({
+				username: "test2",
+				password: "password",
+				first_name: "Test2",
+				last_name: "Testy2",
+				phone: "+14155550000"
+			});
+			const msg = await request(app)
+				.post("/messages/")
+				.send({ to_username: "test2", body: "test body", _token: token });
+
+			const resp = await request(app).get(`/users/test1/from`).send({ _token: null });
+			expect(resp.status).toEqual(401);
+		});
+	});
+	describe("get /:username/to", function() {
+		test("can get messages to a user", async function() {
+			let u2 = await User.register({
+				username: "test2",
+				password: "password",
+				first_name: "Test2",
+				last_name: "Testy2",
+				phone: "+14155550000"
+			});
+			const msg = await request(app)
+				.post("/messages/")
+				.send({ to_username: "test2", body: "test body", _token: token });
+			const authLogin = await request(app).post("/auth/login").send({
+				username: "test2",
+				password: "password"
+			});
+			const authToken = authLogin.body.token;
+			const resp = await request(app).get(`/users/test2/to`).send({ _token: authToken });
+			expect(resp.status).toEqual(200);
+			expect(resp.body).toEqual({
+				messages: [
+					{
+						id: expect.any(Number),
+						body: "test body",
+						sent_at: expect.any(String),
+						read_at: null,
+						from_user: expect.any(Object)
+					}
+				]
+			});
+		});
+		test("cannot get messages to a user if unauthorized", async function() {
+			let u2 = await User.register({
+				username: "test2",
+				password: "password",
+				first_name: "Test2",
+				last_name: "Testy2",
+				phone: "+14155550000"
+			});
+			const msg = await request(app)
+				.post("/messages/")
+				.send({ to_username: "test2", body: "test body", _token: token });
+
+			const resp = await request(app).get(`/users/test2/to`).send({ _token: token });
+			expect(resp.status).toEqual(401);
+		});
+	});
 });
 
 afterAll(async function() {
